@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeployHub - Status</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header>
+        <h1>DeployHub 🎮</h1>
+        <nav>
+            <a href="/">Dashboard</a>
+            <a href="/status">Status</a>
+        </nav>
+    </header>
+    <main>
+        <h2>System Status</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Dependency</th>
+                    <th>Status</th>
+                    <th>Detail</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>PostgreSQL Database (Supabase)</td>
+                    <td class="{{ 'ok' if db_ok else 'err' }}">{{ 'OK' if db_ok else 'DOWN' }}</td>
+                    <td>{{ db_msg }}</td>
+                </tr>
+                <tr>
+                    <td>PokeAPI</td>
+                    <td class="{{ 'ok' if poke_ok else 'err' }}">{{ 'OK' if poke_ok else 'DOWN' }}</td>
+                    <td>{{ poke_msg }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </main>
+</body>
+</html>
