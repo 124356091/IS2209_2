@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeployHub - Pokémon Team</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header>
+        <h1>DeployHub 🎮</h1>
+        <nav>
+            <a href="/">Dashboard</a>
+            <a href="/status">Status</a>
+        </nav>
+    </header>
+    <main>
+        <h2>My Pokémon Team</h2>
+
+        <form class="add-form" id="addForm">
+            <input type="text" id="pokemonInput" placeholder="Enter Pokémon name (e.g. pikachu)" required />
+            <input type="text" id="nicknameInput" placeholder="Nickname (optional)" />
+            <button type="submit">Add to Team</button>
+            <span id="formMsg"></span>
+        </form>
+
+        <div class="project-grid" id="teamGrid">
+            {% if favourites %}
+                {% for item in favourites %}
+                <div class="card" id="card-{{ item.saved.id }}">
+                    {% if item.pokemon.get('sprite') %}
+                    <img src="{{ item.pokemon.sprite }}" alt="{{ item.saved.pokemon_name }}" class="sprite" />
+                    {% endif %}
+                    <h3>
+                        {{ item.saved.nickname if item.saved.nickname else item.saved.pokemon_name | capitalize }}
+                    </h3>
+                    {% if item.saved.nickname %}
+                    <p class="desc">{{ item.saved.pokemon_name | capitalize }}</p>
+                    {% endif %}
+                    {% if item.pokemon.get('error') %}
+                        <p class="error">PokeAPI data unavailable</p>
+                    {% else %}
+                        <div class="types">
+                            {% for t in item.pokemon.types %}
+                            <span class="type type-{{ t }}">{{ t }}</span>
+                            {% endfor %}
+                        </div>
+                        <div class="stats">
+                            <span>HP: {{ item.pokemon.stats.hp }}</span>
+                            <span>ATK: {{ item.pokemon.stats.attack }}</span>
+                            <span>DEF: {{ item.pokemon.stats.defense }}</span>
+                            <span>SPD: {{ item.pokemon.stats.speed }}</span>
+                        </div>
+                        <p class="desc">Height: {{ item.pokemon.height / 10 }}m &nbsp;|&nbsp; Weight: {{ item.pokemon.weight / 10 }}kg</p>
+                    {% endif %}
+                    <button class="delete-btn" onclick="removePokemon({{ item.saved.id }})">Remove</button>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p id="emptyMsg">No Pokémon saved yet. Add one above!</p>
+            {% endif %}
+        </div>
+    </main>
+
+    <script>
+        document.getElementById('addForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const name = document.getElementById('pokemonInput').value.trim().toLowerCase();
+            const nickname = document.getElementById('nicknameInput').value.trim();
+            const msg = document.getElementById('formMsg');
+
+            msg.textContent = 'Adding...';
+            msg.style.color = '#8b949e';
+
+            const res = await fetch('/api/pokemon', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({pokemon_name: name, nickname: nickname})
+            });
+
+            if (res.ok) {
+                msg.textContent = '✅ Added!';
+                msg.style.color = '#3fb950';
+                document.getElementById('pokemonInput').value = '';
+                document.getElementById('nicknameInput').value = '';
+                setTimeout(() => location.reload(), 800);
+            } else {
+                const data = await res.json();
+                msg.textContent = '❌ ' + (data.error || 'Error');
+                msg.style.color = '#f85149';
+            }
+        });
+
+        async function removePokemon(id) {
+            const res = await fetch('/api/pokemon/' + id, {method: 'DELETE'});
+            if (res.ok) {
+                document.getElementById('card-' + id).remove();
+            }
+        }
+    </script>
+</body>
+</html>
